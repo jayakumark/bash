@@ -11,6 +11,7 @@ DROPLET_SIZE="512mb"
 DROPLET_IMAGE="ubuntu-14-04-x64" # must be slug -string-, not numerical ID - https://api.digitalocean.com/v2/images?type=distribution
 DROPLET_SSH_KEY="585424" # must be the ssh_key id or fingerprint - https://api.digitalocean.com/v2/account/keys
 API_ENDPOINT="https://api.digitalocean.com/v2/droplets"
+SSH_KEY_PATH="/path/to/sshkey" # optional, set this to print out a convenient ssh cmd line to connect afterwards
 
 ### Code
 
@@ -34,7 +35,7 @@ new_droplet=$(curl -qSs -X POST "$API_ENDPOINT" -d$JSON -H "Authorization: Beare
 
 droplet_id=$(echo $new_droplet | jq '.droplet | .id')
 
-sleep 5
+sleep 3 # added this delay since sometimes the create response returns without the IP address
 
 droplet_status_json=$(curl -qSs -X GET "$API_ENDPOINT/$droplet_id" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json")
 
@@ -42,6 +43,4 @@ new_droplet_ip_string=$(echo $droplet_status_json | jq '.droplet | .networks | .
 new_droplet_ip=$(echo $new_droplet_ip_string | sed 's/.\(.*\)/\1/' | sed 's/\(.*\)./\1/')
 
 echo -e "\nNew droplet created - NAME:$DROPLET_NAME - ID:$droplet_id - IP:$new_droplet_ip"
-echo -e "\n \t ssh -i $TOKENPATH root@$new_droplet_ip \n"
-
-# TODO: add a status check loop to print when the droplet is ready
+echo -e "\n \t ssh -i $SSH_KEY_PATH root@$new_droplet_ip \n"
